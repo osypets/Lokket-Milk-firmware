@@ -2,5 +2,7 @@
 
 if [ "$INTERFACE" = "wan" ] && [ "$ACTION" = "ifup" ]
 then
-        /etc/init.d/dropbear restart
+        echo 0 > /sys/class/leds/ubnt\:green\:dome/brightness
+		echo 0 > /sys/class/leds/ubnt\:orange\:dome/brightness
+		echo 1 > /sys/class/leds/ubnt\:green\:dome/brightness
 fi
