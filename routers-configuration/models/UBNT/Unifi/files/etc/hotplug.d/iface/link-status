@@ -1,8 +1,8 @@
 #!/bin/sh
 
-if [ "$INTERFACE" = "wan" ] && [ "$ACTION" = "ifup" ]
+if [ "$INTERFACE" = "eth0" ] && [ "$ACTION" = "ifup" ]
 then
         echo 0 > /sys/class/leds/ubnt\:green\:dome/brightness
 		echo 0 > /sys/class/leds/ubnt\:orange\:dome/brightness
-		echo 1 > /sys/class/leds/ubnt\:green\:dome/brightness
+		echo 1 > /sys/class/leds/ubnt\:orange\:dome/brightness
 fi
