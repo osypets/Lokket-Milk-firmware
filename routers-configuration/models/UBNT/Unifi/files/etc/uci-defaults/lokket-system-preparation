@@ -1,3 +1,5 @@
+#!/bin/sh
+
 ### Set hostname of router
 
 uci set system.@system[-1].hostname='Milk-AP'
@@ -62,7 +64,6 @@ uci set network.lan.ifname='eth1'
 #uci delete network.lan.proto='static'
 #uci delete network.lan.ipaddr='192.168.1.1'
 #uci delete network.lan.netmask='255.255.255.0'
-
 
 uci commit
 

@@ -7,7 +7,14 @@ config wifi-device  radio0
 
 config wifi-iface
 	option device   radio0
-	option network  lan
+	option network  mesh
 	option mode     adhoc
 	option ssid     'lokket.com - mesh'
+	option encryption none
+	
+config wifi-iface
+	option device   radio0
+	option network  lan
+	option mode     ap
+	option ssid     'FreeWifi'
 	option encryption none
