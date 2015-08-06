@@ -1,0 +1,38 @@
+### Set hostname of router
+
+uci set system.@system[-1].hostname='Milk-AP'
+
+### Set of Lokket cjdns servers
+
+uci add cjdns udp_peer
+uci set cjdns.@udp_peer[-1].interface='1'
+uci set cjdns.@udp_peer[-1].address='46.101.196.90'
+uci set cjdns.@udp_peer[-1].port='11941'
+uci set cjdns.@udp_peer[-1].public_key='452w4hgj4y4s9zmzjcs84w5qsx1hqkqxvhkgsdm1qz4jjs0wrcl0.k'
+uci set cjdns.@udp_peer[-1].password='y5k9tukhy58kmbd08x3rqwruv4k825g'
+
+uci add cjdns udp_peer
+uci set cjdns.@udp_peer[-1].interface='1'
+uci set cjdns.@udp_peer[-1].address='52.64.75.111'
+uci set cjdns.@udp_peer[-1].port='11941'
+uci set cjdns.@udp_peer[-1].public_key='dvj4pqlkrpxczubfnfpvf9mh5l6gyy0jxl7vw7crm8b4r7433t10.k'
+uci set cjdns.@udp_peer[-1].password='bybj26mc3unutkzrub05f7sft12107z'
+
+uci add cjdns udp_peer
+uci set cjdns.@udp_peer[-1].interface='1'
+uci set cjdns.@udp_peer[-1].address='52.64.84.231'
+uci set cjdns.@udp_peer[-1].port='11941'
+uci set cjdns.@udp_peer[-1].public_key='gd5fq03n9gvjrc5lk59hrjj3fcxbutymnsl0b6rq3mfkgvu2dxp0.k'
+uci set cjdns.@udp_peer[-1].password='3pry0x85ru8zkpj1b5rmvybxb1pgkub'
+
+uci add cjdns udp_peer
+uci set cjdns.@udp_peer[-1].interface='1'
+uci set cjdns.@udp_peer[-1].address='128.199.137.36'
+uci set cjdns.@udp_peer[-1].port='11941'
+uci set cjdns.@udp_peer[-1].public_key='hzbfqstw3q7sfqbzr6wutywjwz68j41gpq3y63jlh6t6r2qr97f0.k'
+uci set cjdns.@udp_peer[-1].password='fjhj3jvpk55xjul7c703z0xp02cy6cv'
+
+uci commit
+
+/etc/init.d/cjdns reload
+/etc/init.d/network restart
