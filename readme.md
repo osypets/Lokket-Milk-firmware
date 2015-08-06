@@ -1,5 +1,10 @@
 Lokket Milk firmware
 
+v. 0.03 alpha
+---
+- added coova-chilli package
+- small configuration changes
+
 v. 0.02 alpha
 ---
 - initial network configuration
