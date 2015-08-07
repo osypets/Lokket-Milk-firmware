@@ -16,5 +16,6 @@ config wifi-iface
 	option device   radio0
 	option network  lan
 	option mode     ap
-	option ssid     'FreeWifi'
-	option encryption none
+	option ssid     'MilkAP'
+	option encryption psk2+tkip+aes
+	option key	HareKrishna
