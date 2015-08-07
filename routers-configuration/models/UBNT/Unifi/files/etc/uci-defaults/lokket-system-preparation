@@ -40,7 +40,7 @@ uci set cjdns.@eth_interface[-1].bind='wlan0'
 
 ### Firewall configuration
 
-### -- TEMPORARY RULE FOR TESTING ---
+## -- TEMPORARY RULE FOR TESTING ---
 
 uci add firewall rule
 uci set firewall.@rule[-1].name='Allow-SSH'
@@ -49,6 +49,10 @@ uci set firewall.@rule[-1].proto='tcp'
 uci set firewall.@rule[-1].dest_port='22'
 uci set firewall.@rule[-1].target='ACCEPT'
 uci set firewall.@rule[-1].family='ipv4'
+
+## Enable management SSH access (CJDNS)
+
+uci set firewall.@rule[8].enabled='1'
 
 ### DHCP reconfiguration
 
