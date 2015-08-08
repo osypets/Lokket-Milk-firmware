@@ -19,4 +19,4 @@ v. 0.02 alpha
 
 v. 0.01 alhpa
 ---
-- added support batman-adv and cjdns support 
+- added batman-adv and cjdns packages
