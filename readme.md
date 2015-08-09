@@ -1,5 +1,10 @@
 # Lokket Milk firmware
 
+
+v. 0.05 alpha
+---
+- batman-adv gw-mode status changes of wan link up/down script
+
 v. 0.04 alpha
 ---
 - network interfaces changes (assign eth0 to wan)

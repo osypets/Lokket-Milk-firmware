@@ -1,70 +1,86 @@
 #!/bin/sh
 
+echo "
 ### Set hostname of router
-uci set system.@system[-1].hostname='Milk-AP'
+set system.@system[-1].hostname='Milk-AP'
 
 ### Set of Lokket cjdns servers
-uci add cjdns udp_peer
-uci set cjdns.@udp_peer[-1].interface='1'
-uci set cjdns.@udp_peer[-1].address='46.101.196.90'
-uci set cjdns.@udp_peer[-1].port='11941'
-uci set cjdns.@udp_peer[-1].public_key='452w4hgj4y4s9zmzjcs84w5qsx1hqkqxvhkgsdm1qz4jjs0wrcl0.k'
-uci set cjdns.@udp_peer[-1].password='y5k9tukhy58kmbd08x3rqwruv4k825g'
-uci add cjdns udp_peer
-uci set cjdns.@udp_peer[-1].interface='1'
-uci set cjdns.@udp_peer[-1].address='52.64.75.111'
-uci set cjdns.@udp_peer[-1].port='11941'
-uci set cjdns.@udp_peer[-1].public_key='dvj4pqlkrpxczubfnfpvf9mh5l6gyy0jxl7vw7crm8b4r7433t10.k'
-uci set cjdns.@udp_peer[-1].password='bybj26mc3unutkzrub05f7sft12107z'
-uci add cjdns udp_peer
-uci set cjdns.@udp_peer[-1].interface='1'
-uci set cjdns.@udp_peer[-1].address='52.64.84.231'
-uci set cjdns.@udp_peer[-1].port='11941'
-uci set cjdns.@udp_peer[-1].public_key='gd5fq03n9gvjrc5lk59hrjj3fcxbutymnsl0b6rq3mfkgvu2dxp0.k'
-uci set cjdns.@udp_peer[-1].password='3pry0x85ru8zkpj1b5rmvybxb1pgkub'
-uci add cjdns udp_peer
-uci set cjdns.@udp_peer[-1].interface='1'
-uci set cjdns.@udp_peer[-1].address='128.199.137.36'
-uci set cjdns.@udp_peer[-1].port='11941'
-uci set cjdns.@udp_peer[-1].public_key='hzbfqstw3q7sfqbzr6wutywjwz68j41gpq3y63jlh6t6r2qr97f0.k'
-uci set cjdns.@udp_peer[-1].password='fjhj3jvpk55xjul7c703z0xp02cy6cv'
+add cjdns udp_peer
+set cjdns.@udp_peer[-1].interface='1'
+set cjdns.@udp_peer[-1].address='46.101.196.90'
+set cjdns.@udp_peer[-1].port='11941'
+set cjdns.@udp_peer[-1].public_key='452w4hgj4y4s9zmzjcs84w5qsx1hqkqxvhkgsdm1qz4jjs0wrcl0.k'
+set cjdns.@udp_peer[-1].password='y5k9tukhy58kmbd08x3rqwruv4k825g'
+add cjdns udp_peer
+set cjdns.@udp_peer[-1].interface='1'
+set cjdns.@udp_peer[-1].address='52.64.75.111'
+set cjdns.@udp_peer[-1].port='11941'
+set cjdns.@udp_peer[-1].public_key='dvj4pqlkrpxczubfnfpvf9mh5l6gyy0jxl7vw7crm8b4r7433t10.k'
+set cjdns.@udp_peer[-1].password='bybj26mc3unutkzrub05f7sft12107z'
+add cjdns udp_peer
+set cjdns.@udp_peer[-1].interface='1'
+set cjdns.@udp_peer[-1].address='52.64.84.231'
+set cjdns.@udp_peer[-1].port='11941'
+set cjdns.@udp_peer[-1].public_key='gd5fq03n9gvjrc5lk59hrjj3fcxbutymnsl0b6rq3mfkgvu2dxp0.k'
+set cjdns.@udp_peer[-1].password='3pry0x85ru8zkpj1b5rmvybxb1pgkub'
+add cjdns udp_peer
+set cjdns.@udp_peer[-1].interface='1'
+set cjdns.@udp_peer[-1].address='128.199.137.36'
+set cjdns.@udp_peer[-1].port='11941'
+set cjdns.@udp_peer[-1].public_key='hzbfqstw3q7sfqbzr6wutywjwz68j41gpq3y63jlh6t6r2qr97f0.k'
+set cjdns.@udp_peer[-1].password='fjhj3jvpk55xjul7c703z0xp02cy6cv'
 
 ### Set cjdns peering WLAN interface
-uci set cjdns.@eth_interface[-1].bind='wlan0'
+set cjdns.@eth_interface[-1].bind='wlan0'
 
 ### Firewall configuration
 
 ## -- TEMPORARY RULE FOR TESTING ---
-uci add firewall rule
-uci set firewall.@rule[-1].name='Allow-SSH'
-uci set firewall.@rule[-1].src='wan'
-uci set firewall.@rule[-1].proto='tcp'
-uci set firewall.@rule[-1].dest_port='22'
-uci set firewall.@rule[-1].target='ACCEPT'
-uci set firewall.@rule[-1].family='ipv4'
+add firewall rule
+set firewall.@rule[-1].name='Allow-SSH'
+set firewall.@rule[-1].src='wan'
+set firewall.@rule[-1].proto='tcp'
+set firewall.@rule[-1].dest_port='22'
+set firewall.@rule[-1].target='ACCEPT'
+set firewall.@rule[-1].family='ipv4'
 
 ## Enable management SSH access (CJDNS)
-uci set firewall.@rule[8].enabled='1'
+delete firewall.@rule[8].enabled='0'
 
 ### DHCP reconfiguration
 
 ### Network reconfiguration
 ## Assign eth0 to wan
-uci set network.wan.ifname='eth0'
-uci set network.lan.ifname='eth1'
+set network.wan.ifname='eth0'
+set network.lan.ifname='eth1'
+set network.wan6.ifname='eth0'
+set network.wan6.proto='dhcpv6'
 
-#uci delete network.lan.proto='static'
-#uci delete network.lan.ipaddr='192.168.1.1'
-#uci delete network.lan.netmask='255.255.255.0'
+## LAN ip address configuration
+set network.lan.ipaddr='192.168.182.1'
+set delete network.lan.netmask='255.255.255.0'
 
-uci commit
+## Setup network interfaces for BATMAN-ADV client gateway mode
+set network.@wan[-1].type='bridge'
+set network.wan.ifname='eth0 bat0'
 
-### Enable privisioning mode lights blinking
-echo 0 > /sys/class/leds/ubnt\:green\:dome/brightness
-echo 0 > /sys/class/leds/ubnt\:orange\:dome/brightness
-echo timer > /sys/class/leds/ubnt\:orange\:dome/trigger
-echo 1000 > /sys/class/leds/ubnt\:orange\:dome/delay_on
-echo 1000 > /sys/class/leds/ubnt\:orange\:dome/delay_off
+## Setup network interfaces for BATMAN-ADV
+set network.bat0.interface
+set network.bat0.ifname='bat0'
+set network.bat0.proto='dhcp'
+set network.bat0.mtu='1532'
+set network.mesh0=interface
+set network.mesh0.ifname='bat0'
+set network.mesh0.mtu='1532'
+set network.mesh0.proto='batadv'
 
-/etc/init.d/cjdns reload
+### BATMAN-ADV configuration
+set batman-adv.bat0=mesh
+set batman-adv.bat0.interfaces='mesh0'
+set batman-adv.bat0.gw_mode='client'
+
+commit" \
+| uci batch
+
 /etc/init.d/network restart
+/etc/init.d/cjdns reload

@@ -8,11 +8,12 @@ config wifi-device  radio0
 config wifi-iface
 	option device   radio0
 	option network  mesh
+	option ifname   mesh0
 	option mode     adhoc
 	option ssid     'lokket.com - mesh'
 	option bssid	'02:CA:FE:CA:CA:40'
 	option encryption none
-	option hidden '1'
+	option hidden '0'
 	
 config wifi-iface
 	option device   radio0

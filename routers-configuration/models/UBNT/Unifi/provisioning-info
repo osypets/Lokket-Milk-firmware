@@ -3,15 +3,12 @@
 ### Firmware version
 
 ### Output AP MAC address
-
 ifconfig | awk '/eth0/' | awk '{print$5}
 
 ### Output machine info
-
 cat /proc/cpuinfo | awk '/machine/'
 
 ### Output management IPv6 address
-
 cat /etc/config/cjdns | awk '/option ipv6/'
 
 ### Provisioning status
