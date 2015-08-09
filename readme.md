@@ -3,6 +3,7 @@
 
 v. 0.05 alpha
 ---
+- initial batman-adv configuration
 - batman-adv gw-mode status changes of wan link up/down script
 
 v. 0.04 alpha

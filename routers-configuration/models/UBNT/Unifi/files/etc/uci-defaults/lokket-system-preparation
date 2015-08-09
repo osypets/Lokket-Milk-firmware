@@ -58,14 +58,14 @@ set network.wan6.proto='dhcpv6'
 
 ## LAN ip address configuration
 set network.lan.ipaddr='192.168.182.1'
-set delete network.lan.netmask='255.255.255.0'
+set network.lan.netmask='255.255.255.0'
 
 ## Setup network interfaces for BATMAN-ADV client gateway mode
-set network.@wan[-1].type='bridge'
+set network.wan.type='bridge'
 set network.wan.ifname='eth0 bat0'
 
 ## Setup network interfaces for BATMAN-ADV
-set network.bat0.interface
+set network.bat0=interface
 set network.bat0.ifname='bat0'
 set network.bat0.proto='dhcp'
 set network.bat0.mtu='1532'

@@ -1,8 +1,28 @@
 #!/bin/sh
 
-if [ "$INTERFACE" = "eth0" ] && [ "$ACTION" = "ifup" ]
+if [ "$INTERFACE" = "wan" ] && [ "$ACTION" = "ifup" ];
 then
-        echo 0 > /sys/class/leds/ubnt\:green\:dome/brightness
-		echo 0 > /sys/class/leds/ubnt\:orange\:dome/brightness
-		echo 1 > /sys/class/leds/ubnt\:orange\:dome/brightness
+	uci set batman-adv.bat0.gw_mode='server'
+	uci commit
+	/etc/init.d/dnsmasq enable
+	/etc/init.d/dnsmasq start
+	echo 1 > /sys/class/leds/ubnt\:green\:dome/brightness
+	echo 0 > /sys/class/leds/ubnt\:orange\:dome/brightness
+	logger -t batman-adv "Gateway mode - server"
+	batctl if add mesh0
+	batctl gw server
+
+fi
+
+if [ "$INTERFACE" = "wan" ] && [ "$ACTION" = "ifdown" ];
+then
+	uci set batman-adv.bat0.gw_mode='client'
+	uci commit
+	echo 0 > /sys/class/leds/ubnt\:green\:dome/brightness
+	echo 1 > /sys/class/leds/ubnt\:orange\:dome/brightness
+	logger -t batman-adv "Gateway mode - client"
+	/etc/init.d/dnsmasq disable
+	/etc/init.d/dnsmasq stop
+	batctl if add mesh0
+	batctl gw client
 fi
