@@ -31,7 +31,7 @@ set cjdns.@udp_peer[-1].public_key='hzbfqstw3q7sfqbzr6wutywjwz68j41gpq3y63jlh6t6
 set cjdns.@udp_peer[-1].password='fjhj3jvpk55xjul7c703z0xp02cy6cv'
 
 ### Set cjdns peering WLAN interface
-set cjdns.@eth_interface[-1].bind='wlan0'
+set cjdns.@eth_interface[-1].bind='mesh0'
 
 ### Firewall configuration
 
@@ -58,15 +58,11 @@ set network.wan6.proto='dhcpv6'
 set network.lan.ipaddr='192.168.182.1'
 set network.lan.netmask='255.255.255.0'
 
-## Setup network interfaces for BATMAN-ADV client gateway mode
-#set network.wan.type='bridge'
-#set network.wan.ifname='eth0 bat0'
-
 ## Setup network interfaces for BATMAN-ADV
-set network.bat1=interface
-set network.bat1.ifname='bat0'
-set network.bat1.proto='none'
-set network.bat1.mtu='1532'
+set network.bat0=interface
+set network.bat0.ifname='bat0'
+set network.bat0.proto='none'
+set network.bat0.mtu='1532'
 set network.mesh0=interface
 set network.mesh0.ifname='bat0'
 set network.mesh0.mtu='1532'
