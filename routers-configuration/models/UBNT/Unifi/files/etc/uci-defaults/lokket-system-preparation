@@ -60,14 +60,14 @@ set network.lan.ipaddr='192.168.182.1'
 set network.lan.netmask='255.255.255.0'
 
 ## Setup network interfaces for BATMAN-ADV
-set network.bat0=interface
-set network.bat0.ifname='bat0'
-set network.bat0.proto='none'
-set network.bat0.mtu='1532'
-set network.mesh0=interface
-set network.mesh0.mesh='bat0'
-set network.mesh0.mtu='1532'
-set network.mesh0.proto='batadv'
+set network.bat=interface
+set network.bat.ifname='bat0'
+set network.bat.proto='none'
+set network.bat.mtu='1500'
+set network.mesh=interface
+set network.mesh.mesh='bat0'
+set network.mesh.mtu='1532'
+set network.mesh.proto='batadv'
 
 ### BATMAN-ADV configuration
 set batman-adv.bat0=mesh
@@ -83,3 +83,4 @@ commit" \
 /etc/init.d/cron enable
 mkdir /etc/milk-scripts
 echo "* * * * * /etc/milk-scripts/batman-adv-gw-mode" > /etc/crontabs/root
+chmod 755 /etc/milk-scripts/batman-adv-gw-mode
