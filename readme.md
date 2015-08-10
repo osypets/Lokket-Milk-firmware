@@ -4,7 +4,7 @@ v. 0.06 alpha
 ---
 - new enhanced batman-adv gw mode script
 - added gateway status LED lights
-- added ethtool and davfs2 packages
+- added ethtool and rsync packages
 - stability improvements
 
 v. 0.05 alpha

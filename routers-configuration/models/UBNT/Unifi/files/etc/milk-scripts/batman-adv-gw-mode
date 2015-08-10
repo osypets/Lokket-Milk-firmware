@@ -4,7 +4,7 @@ GWMODE=$(uci get batman-adv.bat0.gw_mode)
 LINK=$(ethtool eth0 | awk '/Link detected/ {print $3}')
 GREENLED=$(cat /sys/class/leds/ubnt\:green\:dome/brightness)
 
-if [ "$GWMODE" = "client" ] && [ "$GREENLED" = "1" ];
+if [ "$GWMODE" = "client" ] && [ "$GREENLED" = "1" ] || [ "$GREENLED" = "255" ];
 
 then
 	echo 0 > /sys/class/leds/ubnt\:green\:dome/brightness
@@ -14,14 +14,13 @@ then
 	echo 10000 > /sys/class/leds/ubnt\:green\:dome/delay_off
 fi	
 
-
 if [ "$LINK" = "yes" ] && [ "$GWMODE" = "client" ];
 
 then
 	echo "
 	set network.wan.ifname='eth0'
 	set network.lan.ifname='eth1 bat0'
-	set network.bat0.proto='none'
+	set network.bat.proto='none'
 	set batman-adv.bat0.gw_mode='server'
 	commit" \
 	| uci batch
@@ -41,7 +40,7 @@ then
 	echo "
 	set network.wan.ifname='bat0'
 	set network.lan.ifname='eth1'
-	set network.bat0.proto='dhcp'
+	set network.bat.proto='dhcp'
 	set batman-adv.bat0.gw_mode='client'
 	commit" \
 	| uci batch
