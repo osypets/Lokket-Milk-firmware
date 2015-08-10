@@ -1,5 +1,11 @@
 # Lokket Milk firmware
 
+v. 0.06 alpha
+---
+- new enhanced batman-adv gw mode script
+- added gateway status LED lights
+- added ethtool and davfs2 packages
+- stability improvements
 
 v. 0.05 alpha
 ---

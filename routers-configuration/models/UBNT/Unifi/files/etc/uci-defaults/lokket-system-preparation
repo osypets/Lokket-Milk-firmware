@@ -48,11 +48,12 @@ set firewall.@rule[-1].family='ipv4'
 delete firewall.@rule[8].enabled='0'
 
 ### Network reconfiguration
-## Assign eth0 to wan
+
 set network.wan.ifname='eth0'
-set network.lan.ifname='eth1'
+set network.lan.ifname='eth1 bat0'
 set network.wan6.ifname='eth0'
 set network.wan6.proto='dhcpv6'
+set network.wan.type='bridge'
 
 ## LAN ip address configuration
 set network.lan.ipaddr='192.168.182.1'
@@ -64,17 +65,21 @@ set network.bat0.ifname='bat0'
 set network.bat0.proto='none'
 set network.bat0.mtu='1532'
 set network.mesh0=interface
-set network.mesh0.ifname='bat0'
+set network.mesh0.mesh='bat0'
 set network.mesh0.mtu='1532'
 set network.mesh0.proto='batadv'
 
 ### BATMAN-ADV configuration
 set batman-adv.bat0=mesh
 set batman-adv.bat0.interfaces='mesh0'
-set batman-adv.bat0.gw_mode='client'
+set batman-adv.bat0.gw_mode='server'
 
 commit" \
 | uci batch
 
 /etc/init.d/network restart
 /etc/init.d/cjdns reload
+/etc/init.d/cron start
+/etc/init.d/cron enable
+
+echo "* * * * * /etc/milk-scripts/batman-adv-gw-mode" > /etc/crontabs/root

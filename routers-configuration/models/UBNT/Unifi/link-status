@@ -6,10 +6,11 @@ then
 	uci commit
 	/etc/init.d/dnsmasq enable
 	/etc/init.d/dnsmasq start
-	echo 1 > /sys/class/leds/ubnt\:green\:dome/brightness
 	echo 0 > /sys/class/leds/ubnt\:orange\:dome/brightness
+	echo 0 > /sys/class/leds/ubnt\:green\:dome/brightness
+	echo 0 > /sys/class/leds/ubnt\:green\:dome/delay_off
+	echo 1 > /sys/class/leds/ubnt\:green\:dome/brightness
 	logger -t batman-adv "Gateway mode - server"
-	batctl if add mesh0
 	batctl gw server
 
 fi
@@ -19,10 +20,13 @@ then
 	uci set batman-adv.bat0.gw_mode='client'
 	uci commit
 	echo 0 > /sys/class/leds/ubnt\:green\:dome/brightness
+	echo 0 > /sys/class/leds/ubnt\:orange\:dome/brightness
 	echo 1 > /sys/class/leds/ubnt\:orange\:dome/brightness
+	echo timer > /sys/class/leds/ubnt\:green\:dome/trigger
+	echo 100 > /sys/class/leds/ubnt\:green\:dome/delay_on
+	echo 10000 > /sys/class/leds/ubnt\:green\:dome/delay_off
 	logger -t batman-adv "Gateway mode - client"
-	/etc/init.d/dnsmasq disable
 	/etc/init.d/dnsmasq stop
-	batctl if add mesh0
+	/etc/init.d/dnsmasq disable
 	batctl gw client
 fi

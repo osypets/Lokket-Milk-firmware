@@ -1,0 +1,40 @@
+#!/bin/sh
+
+if [ "$INTERFACE" = "wan" ] && [ "$ACTION" = "ifup" ];
+then
+	echo "
+	set network.wan.ifname='eth0'
+	set network.lan.ifname='eth1 bat0'
+	set network.bat0.proto='none'
+	set batman-adv.bat0.gw_mode='server'
+	commit" \
+	| uci batch
+	/etc/init.d/network restart
+	sleep 10
+	echo 0 > /sys/class/leds/ubnt\:orange\:dome/brightness
+	echo 0 > /sys/class/leds/ubnt\:green\:dome/brightness
+	echo 0 > /sys/class/leds/ubnt\:green\:dome/delay_off
+	echo 1 > /sys/class/leds/ubnt\:green\:dome/brightness
+	logger -t batman-adv "Gateway mode - server"
+
+fi
+
+if [ "$INTERFACE" = "wan" ] && [ "$ACTION" = "ifdown" ];
+then
+	echo "
+	set network.wan.ifname='bat0'
+	set network.lan.ifname='eth1'
+	set network.bat0.proto='dhcp'
+	set batman-adv.bat0.gw_mode='client'
+	commit" \
+	| uci batch
+	/etc/init.d/network restart
+	sleep 10
+	echo 0 > /sys/class/leds/ubnt\:green\:dome/brightness
+	echo 0 > /sys/class/leds/ubnt\:orange\:dome/brightness
+	echo 1 > /sys/class/leds/ubnt\:orange\:dome/brightness
+	echo timer > /sys/class/leds/ubnt\:green\:dome/trigger
+	echo 100 > /sys/class/leds/ubnt\:green\:dome/delay_on
+	echo 10000 > /sys/class/leds/ubnt\:green\:dome/delay_off
+	logger -t batman-adv "Gateway mode - client"
+fi

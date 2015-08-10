@@ -14,6 +14,7 @@ config wifi-iface
 	option bssid	'02:CA:FE:CA:CA:40'
 	option encryption none
 	option hidden '0'
+	option mcast_rate 18000
 	
 config wifi-iface
 	option device   radio0
