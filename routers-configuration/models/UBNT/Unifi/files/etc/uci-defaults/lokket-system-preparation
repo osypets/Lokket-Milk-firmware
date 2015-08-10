@@ -81,5 +81,5 @@ commit" \
 /etc/init.d/cjdns reload
 /etc/init.d/cron start
 /etc/init.d/cron enable
-
+mkdir /etc/milk-scripts
 echo "* * * * * /etc/milk-scripts/batman-adv-gw-mode" > /etc/crontabs/root
