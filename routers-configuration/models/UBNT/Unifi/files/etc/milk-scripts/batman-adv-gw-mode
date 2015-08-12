@@ -4,21 +4,6 @@ GWMODE=$(uci get batman-adv.bat0.gw_mode)
 LINK=$(ethtool eth0 | awk '/Link detected/ {print $3}')
 GREENLED=$(cat /sys/class/leds/ubnt\:green\:dome/brightness)
 
-if [ "$GWMODE" = "client" ] && [ "$GREENLED" = "1" ] || [ "$GREENLED" = "255" ];
-
-then
-	echo 0 > /sys/class/leds/ubnt\:green\:dome/brightness
-	echo 1 > /sys/class/leds/ubnt\:orange\:dome/brightness
-	echo timer > /sys/class/leds/ubnt\:green\:dome/trigger
-	echo 100 > /sys/class/leds/ubnt\:green\:dome/delay_on
-	echo 10000 > /sys/class/leds/ubnt\:green\:dome/delay_off
-else
-	echo 0 > /sys/class/leds/ubnt\:orange\:dome/brightness
-	echo 0 > /sys/class/leds/ubnt\:green\:dome/brightness
-	echo 0 > /sys/class/leds/ubnt\:green\:dome/delay_off
-	echo 1 > /sys/class/leds/ubnt\:green\:dome/brightness
-fi	
-
 if [ "$LINK" = "yes" ] && [ "$GWMODE" = "client" ];
 
 then
@@ -49,4 +34,19 @@ then
 	/etc/init.d/cjdns restart
 	sleep 10
 	logger -t batman-adv "Gateway mode - client"
+fi
+
+if [ "$GWMODE" = "client" ];
+
+then
+        echo 0 > /sys/class/leds/ubnt\:green\:dome/brightness
+        echo 1 > /sys/class/leds/ubnt\:orange\:dome/brightness
+        echo timer > /sys/class/leds/ubnt\:green\:dome/trigger
+        echo 100 > /sys/class/leds/ubnt\:green\:dome/delay_on
+        echo 10000 > /sys/class/leds/ubnt\:green\:dome/delay_off
+else
+        echo 0 > /sys/class/leds/ubnt\:orange\:dome/brightness
+        echo 0 > /sys/class/leds/ubnt\:green\:dome/brightness
+        echo 0 > /sys/class/leds/ubnt\:green\:dome/delay_off
+        echo 1 > /sys/class/leds/ubnt\:green\:dome/brightness
 fi
