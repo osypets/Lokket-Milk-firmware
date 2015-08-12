@@ -2,10 +2,10 @@
 
 GWMODE=$(uci get batman-adv.bat0.gw_mode)
 LINK=$(ethtool eth0 | awk '/Link detected/ {print $3}')
+PING=$(ping -c10 -I bat0 google.com; echo $?)
 GREENLED=$(cat /sys/class/leds/ubnt\:green\:dome/brightness)
 
-if [ "$LINK" = "yes" ] && [ "$GWMODE" = "client" ];
-
+if [ "$LINK" = "yes" ] && [ "$PING" = "0" ] && [ "$GWMODE" = "client" ];
 then
 	echo "
 	set network.wan.ifname='eth0'
@@ -18,10 +18,10 @@ then
 	/etc/init.d/cjdns restart
 	sleep 10
 	logger -t batman-adv "Gateway mode - server"
+	GWMODE=server
 fi
 
-if [ "$LINK" = "no" ] && [ "$GWMODE" = "server" ];
-
+if [ "$LINK" = "yes" ] && [ "$PING" = "1" ] &&  [ "$GWMODE" = "server" ];
 then	
 	echo "
 	set network.wan.ifname='bat0'
@@ -34,19 +34,35 @@ then
 	/etc/init.d/cjdns restart
 	sleep 10
 	logger -t batman-adv "Gateway mode - client"
+	GWMODE=client
+fi
+
+if [ "$LINK" = "no" ] && [ "$GWMODE" = "server" ];
+then	
+	echo "
+	set network.wan.ifname='bat0'
+	set network.lan.ifname='eth1'
+	set network.bat.proto='dhcp'
+	set batman-adv.bat0.gw_mode='client'
+	commit" \
+	| uci batch
+	/etc/init.d/network restart
+	/etc/init.d/cjdns restart
+	sleep 10
+	logger -t batman-adv "Gateway mode - client"
+	GWMODE=client
 fi
 
 if [ "$GWMODE" = "client" ];
-
 then
-        echo 0 > /sys/class/leds/ubnt\:green\:dome/brightness
-        echo 1 > /sys/class/leds/ubnt\:orange\:dome/brightness
-        echo timer > /sys/class/leds/ubnt\:green\:dome/trigger
-        echo 100 > /sys/class/leds/ubnt\:green\:dome/delay_on
-        echo 10000 > /sys/class/leds/ubnt\:green\:dome/delay_off
+    echo 0 > /sys/class/leds/ubnt\:green\:dome/brightness
+    echo 1 > /sys/class/leds/ubnt\:orange\:dome/brightness
+    echo timer > /sys/class/leds/ubnt\:green\:dome/trigger
+    echo 100 > /sys/class/leds/ubnt\:green\:dome/delay_on
+    echo 10000 > /sys/class/leds/ubnt\:green\:dome/delay_off
 else
-        echo 0 > /sys/class/leds/ubnt\:orange\:dome/brightness
-        echo 0 > /sys/class/leds/ubnt\:green\:dome/brightness
-        echo 0 > /sys/class/leds/ubnt\:green\:dome/delay_off
-        echo 1 > /sys/class/leds/ubnt\:green\:dome/brightness
+    echo 0 > /sys/class/leds/ubnt\:orange\:dome/brightness
+    echo 0 > /sys/class/leds/ubnt\:green\:dome/brightness
+    echo 0 > /sys/class/leds/ubnt\:green\:dome/delay_off
+    echo 1 > /sys/class/leds/ubnt\:green\:dome/brightness
 fi
