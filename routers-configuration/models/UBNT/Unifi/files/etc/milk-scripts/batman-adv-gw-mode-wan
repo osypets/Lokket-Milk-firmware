@@ -2,47 +2,51 @@
 
 GWMODE=$(uci get batman-adv.bat0.gw_mode)
 LINK=$(ethtool eth0 | awk '/Link detected/ {print $3}')
-PING=$(ping -q -c 5 -I br-wan 8.8.8.8 > /dev/null && echo 1 || echo 0)
-WANIF=$(uci get network.wan.ifname)
 
-if [ "$WANIF" = "bat0" ];
+if [ "$LINK" = "yes" ] && [ "$GWMODE" = "client" ];
 then
 	echo "
 	set network.wan.ifname='eth0'
 	set network.lan.ifname='eth1 bat0'
 	set network.bat.proto='none'
+	set batman-adv.bat0.gw_mode='server'
 	commit" \
 	| uci batch
 	/etc/init.d/network restart
-	PING=$(ping -q -c 5 -I br-wan 8.8.8.8 > /dev/null && echo 1 || echo 0)
-fi
-
-if [ "$LINK" = "yes" ] && [ "$PING" = "1" ] && [ "$GWMODE" = "client" ];
-then
-	set batman-adv.bat0.gw_mode='server'
-	/etc/init.d/dnsmasq start
-	/etc/init.d/dnsmasq enable
 	/etc/init.d/cjdns restart
+	sleep 10
 	logger -t batman-adv "Gateway mode - server"
 	GWMODE=server
 fi
 
-if [ "$LINK" = "yes" ] && [ "$PING" = "0" ] &&  [ "$GWMODE" = "server" ];
+if [ "$LINK" = "yes" ] &&  [ "$GWMODE" = "server" ];
 then	
+	echo "
+	set network.wan.ifname='bat0'
+	set network.lan.ifname='eth1'
+	set network.bat.proto='dhcp'
 	set batman-adv.bat0.gw_mode='client'
-	/etc/init.d/dnsmasq stop
-	/etc/init.d/dnsmasq disable
+	commit" \
+	| uci batch
+	/etc/init.d/network restart
 	/etc/init.d/cjdns restart
+	sleep 10
 	logger -t batman-adv "Gateway mode - client"
 	GWMODE=client
 fi
 
 if [ "$LINK" = "no" ] && [ "$GWMODE" = "server" ];
 then	
+	echo "
+	set network.wan.ifname='bat0'
+	set network.lan.ifname='eth1'
+	set network.bat.proto='dhcp'
 	set batman-adv.bat0.gw_mode='client'
-	/etc/init.d/dnsmasq stop
-	/etc/init.d/dnsmasq disable
+	commit" \
+	| uci batch
+	/etc/init.d/network restart
 	/etc/init.d/cjdns restart
+	sleep 10
 	logger -t batman-adv "Gateway mode - client"
 	GWMODE=client
 fi
