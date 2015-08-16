@@ -1,10 +1,23 @@
 #!/bin/sh
 
-echo "
-### Set hostname of router
-set system.@system[-1].hostname='Milk-AP'
+echo " " > /etc/config/milk
 
-### Set of Lokket cjdns servers
+#################################### MILK parameters 
+echo "
+set milk.global=params
+set milk.global.status='unprovisioned'
+set milk.global.mode='globalwan'
+commit milk" \
+| uci batch
+
+#################################### SYSTEM parameters 
+echo "
+set system.@system[-1].hostname='Milk-AP'
+commit system" \
+| uci batch
+
+#################################### CJDNS parameters and peers
+echo "
 add cjdns udp_peer
 set cjdns.@udp_peer[-1].interface='1'
 set cjdns.@udp_peer[-1].address='46.101.196.90'
@@ -30,12 +43,145 @@ set cjdns.@udp_peer[-1].port='11941'
 set cjdns.@udp_peer[-1].public_key='hzbfqstw3q7sfqbzr6wutywjwz68j41gpq3y63jlh6t6r2qr97f0.k'
 set cjdns.@udp_peer[-1].password='fjhj3jvpk55xjul7c703z0xp02cy6cv'
 
-### Set cjdns peering WLAN interface
+## Set cjdns peering WLAN interface
 set cjdns.@eth_interface[-1].bind='mesh0'
+commit cjdns" \
+| uci batch
 
-### Firewall configuration
+#################################### NETWORK configuration
+echo "
+set network.wan.ifname='eth0'
+set network.lan.ifname='eth1 bat0'
+set network.wan6.ifname='eth0'
+set network.wan6.proto='dhcpv6'
+set network.wan.type='bridge'
 
-## -- TEMPORARY RULE FOR TESTING ---
+## LAN ip address configuration
+set network.lan.ipaddr='10.100.180.1'
+set network.lan.netmask='255.255.255.0'
+
+## Setup network interfaces for BATMAN-ADV
+set network.bat=interface
+set network.bat.ifname='bat0'
+set network.bat.proto='none'
+set network.mesh=interface
+set network.mesh.mesh='bat0'
+set network.mesh.mtu='1544'
+set network.mesh.proto='batadv'
+commit network" \
+| uci batch
+
+#################################### WIRELESS network configuration
+echo "
+## Create wireless for MESH
+set wireless.mesh=wifi-iface
+set wireless.mesh.device='radio0'
+set wireless.mesh.network='mesh'
+set wireless.mesh.ifname='mesh0'
+set wireless.mesh.mode='adhoc'
+set wireless.mesh.ssid='mesh.lokket.com'
+set wireless.mesh.bssid='02:CA:FE:CA:CA:40'
+set wireless.mesh.encryption='none'
+set wireless.mesh.hidden='0'
+set wireless.mesh.mcast_rate='18000'
+commit wireless" \
+| uci batch
+
+#################################### BATMAN-ADV configuration
+echo "
+set batman-adv.bat0=mesh
+set batman-adv.bat0.interfaces='mesh0'
+set batman-adv.bat0.gw_mode='server'
+commit batman-adv" \
+| uci batch
+
+#################################### FIREWALL configuration
+echo "
+## Create Public zone
+add firewall zone
+set firewall.@zone[-1].name='pub'
+set firewall.@zone[-1].input='REJECT'
+set firewall.@zone[-1].output='ACCEPT'
+set firewall.@zone[-1].forward='REJECT'
+set firewall.@zone[-1].conntrack='1'
+
+add firewall forwarding
+set firewall.@forwarding[-1].src='pub'
+set firewall.@forwarding[-1].dest='wan'
+
+add firewall redirect
+set firewall.@redirect[-1].src='wan'
+set firewall.@redirect[-1].dest='pub'
+set firewall.@redirect[-1].target='SNAT'
+
+## Create firewall rules for Public zone
+add firewall rule
+set firewall.@rule[-1].name='Allow-DHCP-renew'
+set firewall.@rule[-1].src='pub'
+set firewall.@rule[-1].proto='udp'
+set firewall.@rule[-1].dest_port='68'
+set firewall.@rule[-1].target='ACCEPT'
+set firewall.@rule[-1].family='ipv4'
+
+add firewall rule
+set firewall.@rule[-1].name='Allow-DHCP'
+set firewall.@rule[-1].src='pub'
+set firewall.@rule[-1].proto='udp'
+set firewall.@rule[-1].dest_port='67'
+set firewall.@rule[-1].target='ACCEPT'
+set firewall.@rule[-1].family='ipv4'
+
+add firewall rule
+set firewall.@rule[-1].name='Allow-Ping'
+set firewall.@rule[-1].src='pub'
+set firewall.@rule[-1].proto='icmp'
+set firewall.@rule[-1].dest_port='53'
+set firewall.@rule[-1].family='ipv4'
+set firewall.@rule[-1].target='ACCEPT'
+
+add firewall rule
+set firewall.@rule[-1].name='Allow-DNS'
+set firewall.@rule[-1].src='pub'
+set firewall.@rule[-1].proto='udp'
+set firewall.@rule[-1].icmp_type='echo-request'
+set firewall.@rule[-1].family='ipv4'
+set firewall.@rule[-1].target='ACCEPT'
+
+## Create Coova zone
+add firewall zone
+set firewall.@zone[-1].name='coo'
+set firewall.@zone[-1].input='REJECT'
+set firewall.@zone[-1].output='ACCEPT'
+set firewall.@zone[-1].forward='REJECT'
+set firewall.@zone[-1].conntrack='1'
+
+add firewall forwarding
+set firewall.@forwarding[-1].src='coo'
+set firewall.@forwarding[-1].dest='wan'
+
+add firewall redirect
+set firewall.@redirect[-1].src='wan'
+set firewall.@redirect[-1].dest='coo'
+set firewall.@redirect[-1].target='SNAT'
+
+## Create MGMT zone
+add firewall zone
+set firewall.@zone[-1].name='mgmt'
+set firewall.@zone[-1].input='REJECT'
+set firewall.@zone[-1].output='ACCEPT'
+set firewall.@zone[-1].forward='REJECT'
+set firewall.@zone[-1].conntrack='1'
+
+add firewall forwarding
+set firewall.@forwarding[-1].src='mgmt'
+set firewall.@forwarding[-1].dest='wan'
+
+add firewall redirect
+set firewall.@redirect[-1].src='wan'
+set firewall.@redirect[-1].dest='mgmt'
+set firewall.@redirect[-1].target='SNAT'
+
+## -- Rule for testing ---
 add firewall rule
 set firewall.@rule[-1].name='Allow-SSH'
 set firewall.@rule[-1].src='wan'
@@ -46,41 +192,13 @@ set firewall.@rule[-1].family='ipv4'
 
 ## Enable management SSH access (CJDNS)
 delete firewall.@rule[8].enabled='0'
-
-### Network reconfiguration
-
-set network.wan.ifname='eth0'
-set network.lan.ifname='eth1 bat0'
-set network.wan6.ifname='eth0'
-set network.wan6.proto='dhcpv6'
-set network.wan.type='bridge'
-
-## LAN ip address configuration
-set network.lan.ipaddr='192.168.182.1'
-set network.lan.netmask='255.255.255.0'
-
-## Setup network interfaces for BATMAN-ADV
-set network.bat=interface
-set network.bat.ifname='bat0'
-set network.bat.proto='none'
-set network.bat.mtu='1500'
-set network.mesh=interface
-set network.mesh.mesh='bat0'
-set network.mesh.mtu='1532'
-set network.mesh.proto='batadv'
-
-### BATMAN-ADV configuration
-set batman-adv.bat0=mesh
-set batman-adv.bat0.interfaces='mesh0'
-set batman-adv.bat0.gw_mode='server'
-
-commit" \
+commit firewall" \
 | uci batch
 
 /etc/init.d/network restart
 /etc/init.d/cjdns reload
 /etc/init.d/cron start
 /etc/init.d/cron enable
-mkdir /etc/milk-scripts
+echo " " > /etc/config/milk
 echo "* * * * * /etc/milk-scripts/batman-adv-gw-mode" > /etc/crontabs/root
 chmod 755 /etc/milk-scripts/batman-adv-gw-mode

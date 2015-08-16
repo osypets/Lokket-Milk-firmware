@@ -1,26 +1,46 @@
 config wifi-device  radio0
 	option type     mac80211
-	option channel  11
+	option channel  6
 	option hwmode	11g
 	option path	'pci0000:00/0000:00:00.0'
 	option htmode	HT20
 
-config wifi-iface
-	option device   radio0
-	option network  mesh
-	option ifname   mesh0
-	option mode     adhoc
-	option ssid     'lokket.com - mesh'
-	option bssid	'02:CA:FE:CA:CA:40'
-	option encryption none
-	option hidden '0'
-	option mcast_rate 18000
-	
-config wifi-iface
-	option device   radio0
-	option network  lan
-	option mode     ap
-	option ssid     'MilkAP'
-	option encryption psk2+tkip+aes
-	option key	HareKrishna
-	option hidden '0'
+config wifi-iface 'mesh'
+        option device   radio0
+        option network  mesh
+        option ifname   mesh0
+        option mode     adhoc
+        option ssid     'lokket.com - mesh'
+        option bssid    '02:CA:FE:CA:CA:40'
+        option encryption none
+        option hidden '0'
+        option mcast_rate 18000
+
+config wifi-iface 'prv'
+        option device   radio0
+        option ifname   prv0
+        option network  prv
+        option mode     ap
+        option ssid     'Goloka'
+        option encryption psk2+tkip+aes
+        option key      HareKrishna
+        option hidden '0'
+
+config wifi-iface 'pub'
+        option device   radio0
+        option ifname   pub0
+        option network  pub
+        option mode     ap
+        option ssid     '.Free WiFi'
+        option encryption none
+        option hidden '0'
+
+config wifi-iface 'mgmt'
+        option device   radio0
+        option ifname   mgmt0
+        option network  mgmt
+        option mode     ap
+        option ssid     'MGMT-2'
+        option encryption psk2+tkip+aes
+        option key      HareKrishna
+        option hidden '0'

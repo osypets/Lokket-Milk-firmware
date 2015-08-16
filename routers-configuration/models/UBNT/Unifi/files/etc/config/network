@@ -1,0 +1,30 @@
+config interface 'loopback'
+        option ifname 'lo'
+        option proto 'static'
+        option ipaddr '127.0.0.1'
+        option netmask '255.0.0.0'
+
+config interface 'mesh'
+        option mesh 'bat0'
+        option mtu '1544'
+        option proto 'batadv'
+
+config interface 'mgmt'
+        option ifname 'bat0.0'
+        option proto 'static'
+        option ipaddr '192.168.1.2'
+        option netmask '255.255.255.0'
+
+config interface 'prv'
+        option proto 'static'
+        option type 'bridge'
+        option ifname 'bat0.10'
+        option ipaddr 10.0.10.1
+        option netmask 255.255.255.0
+
+config interface 'pub'
+        option proto 'static'
+        option type 'bridge'
+        option ifname 'bat0.20'
+        option ipaddr 10.0.20.1
+        option netmask 255.255.255.0
