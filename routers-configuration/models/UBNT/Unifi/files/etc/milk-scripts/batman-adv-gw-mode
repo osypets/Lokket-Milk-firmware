@@ -1,9 +1,10 @@
 #!/bin/sh
 
-GWMODE=$(uci get batman-adv.bat0.gw_mode)
 LINK=$(ethtool eth0 | awk '/Link detected/ {print $3}')
 PING=$(ping -q -c 5 -I br-wan 8.8.8.8 > /dev/null && echo 1 || echo 0)
 WANIF=$(uci get network.wan.ifname)
+GW_MODE=$(uci get batman-adv.bat0.gw_mode)
+STATUS=$(uci get milk.global.status)
 
 if [ "$WANIF" = "bat0" ];
 then
@@ -17,46 +18,66 @@ then
 	PING=$(ping -q -c 5 -I br-wan 8.8.8.8 > /dev/null && echo 1 || echo 0)
 fi
 
-if [ "$LINK" = "yes" ] && [ "$PING" = "1" ] && [ "$GWMODE" = "client" ];
+if [ "$LINK" = "yes" ] && [ "$PING" = "1" ] && [ "$GW_MODE" = "client" ];
 then
-	set batman-adv.bat0.gw_mode='server'
+	GW_MODE=server
+	uci set batman-adv.bat0.gw_mode=$GW_MODE
+	uci commit batman-adv
+	batctl gw $GW_MODE
 	/etc/init.d/dnsmasq start
 	/etc/init.d/dnsmasq enable
 	/etc/init.d/cjdns restart
-	logger -t batman-adv "Gateway mode - server"
-	GWMODE=server
-fi
+	logger -t MILK-AP "Gateway mode changed - $GW_MODE"
 
-if [ "$LINK" = "yes" ] && [ "$PING" = "0" ] &&  [ "$GWMODE" = "server" ];
-then	
-	set batman-adv.bat0.gw_mode='client'
-	/etc/init.d/dnsmasq stop
-	/etc/init.d/dnsmasq disable
-	/etc/init.d/cjdns restart
-	logger -t batman-adv "Gateway mode - client"
-	GWMODE=client
-fi
-
-if [ "$LINK" = "no" ] && [ "$GWMODE" = "server" ];
-then	
-	set batman-adv.bat0.gw_mode='client'
-	/etc/init.d/dnsmasq stop
-	/etc/init.d/dnsmasq disable
-	/etc/init.d/cjdns restart
-	logger -t batman-adv "Gateway mode - client"
-	GWMODE=client
-fi
-
-if [ "$GWMODE" = "client" ];
+elif [ "$LINK" = "yes" ] && [ "$PING" = "0" ] && [ "$GW_MODE" = "server" ];
 then
-    echo 0 > /sys/class/leds/ubnt\:green\:dome/brightness
-    echo 1 > /sys/class/leds/ubnt\:orange\:dome/brightness
-    echo timer > /sys/class/leds/ubnt\:green\:dome/trigger
-    echo 100 > /sys/class/leds/ubnt\:green\:dome/delay_on
-    echo 10000 > /sys/class/leds/ubnt\:green\:dome/delay_off
+	GW_MODE=client	
+	uci set batman-adv.bat0.gw_mode=$GW_MODE
+	uci commit batman-adv
+	batctl gw $GW_MODE
+	/etc/init.d/dnsmasq stop
+	/etc/init.d/dnsmasq disable
+	/etc/init.d/cjdns restart
+	logger -t MILK-AP "Gateway mode changed - $GW_MODE"
+
+elif [ "$LINK" = "no" ] && [ "$GW_MODE" = "server" ];
+then
+	GW_MODE=client	
+	uci set batman-adv.bat0.gw_mode=$GW_MODE
+	uci commit batman-adv
+	batctl gw $GW_MODE
+	/etc/init.d/dnsmasq stop
+	/etc/init.d/dnsmasq disable
+	/etc/init.d/cjdns restart
+	logger -t batman-adv "Gateway mode changed - $GW_MODE"
 else
-    echo 0 > /sys/class/leds/ubnt\:orange\:dome/brightness
-    echo 0 > /sys/class/leds/ubnt\:green\:dome/brightness
-    echo 0 > /sys/class/leds/ubnt\:green\:dome/delay_off
-    echo 1 > /sys/class/leds/ubnt\:green\:dome/brightness
+	logger -t MILK-AP "Gateway mode - $GW_MODE. Correct operation mode."
 fi
+
+if [ "$STATUS" = "provisioned" ];
+then
+	if [ "$GW_MODE" = "client" ];
+	then
+		echo 0 > /sys/class/leds/ubnt\:green\:dome/brightness
+		echo 1 > /sys/class/leds/ubnt\:orange\:dome/brightness
+		echo timer > /sys/class/leds/ubnt\:green\:dome/trigger
+		echo 100 > /sys/class/leds/ubnt\:green\:dome/delay_on
+		echo 10000 > /sys/class/leds/ubnt\:green\:dome/delay_off	
+	
+	elif [ "$GW_MODE" = "server" ];
+	then
+    	echo 0 > /sys/class/leds/ubnt\:orange\:dome/brightness
+		echo 0 > /sys/class/leds/ubnt\:green\:dome/brightness
+		echo 1 > /sys/class/leds/ubnt\:green\:dome/brightness
+	fi
+
+elif [ "$STATUS" = "unprovisioned" ];
+then
+	echo 0 > /sys/class/leds/ubnt\:green\:dome/brightness
+	echo 1 > /sys/class/leds/ubnt\:orange\:dome/brightness
+	echo timer > /sys/class/leds/ubnt\:green\:dome/trigger
+	echo 100 > /sys/class/leds/ubnt\:green\:dome/delay_on
+	echo 100 > /sys/class/leds/ubnt\:green\:dome/delay_off
+	logger -t MILK-AP "Access point is unprovisioned."
+fi
+	
