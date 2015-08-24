@@ -1,0 +1,92 @@
+#!/bin/sh
+
+while getopts "o:w:s:e:k:i:p:m:" opt; do
+  case $opt in
+    o)	OPERATION=${OPTARG};; 
+    w)	WIRELESS_ID=${OPTARG};;   
+    s)	SSID=${OPTARG};;
+    e)	ENCRYPTION=${OPTARG};;
+    k) 	ENCRYPTION_KEY=${OPTARG};;
+    i)	IF_NAME=${OPTARG};;
+    p)	IP_ADDR=${OPTARG};;
+    m)	NETMASK=${OPTARG};;
+  esac
+done
+
+if [ "$OPERATION" = "add" ];
+then
+	#################################### WIRELESS network configuration
+	if [ -n "$ENCRYPTION" ] && [ -n "$ENCRYPTION_KEY" ];
+	then
+		echo "
+		## Create a new wireless interface
+		set wireless.$WIRELESS_ID=wifi-iface
+		set wireless.$WIRELESS_ID.device='radio0'
+		set wireless.$WIRELESS_ID.network=$WIRELESS_ID
+		set wireless.$WIRELESS_ID.ifname=$IF_NAME
+		set wireless.$WIRELESS_ID.mode='ap'
+		set wireless.$WIRELESS_ID.ssid=$SSID
+		set wireless.$WIRELESS_ID.encryption=$ENCRYPTION
+		set wireless.$WIRELESS_ID.key=$ENCRYPTION_KEY
+		set wireless.$WIRELESS_ID.hidden='0'
+		commit wireless" \
+		| uci batch
+	else
+		echo "
+		## Create a new wireless interface
+		set wireless.$WIRELESS_ID=wifi-iface
+		set wireless.$WIRELESS_ID.device='radio0'
+		set wireless.$WIRELESS_ID.network=$WIRELESS_ID
+		set wireless.$WIRELESS_ID.ifname=$IF_NAME
+		set wireless.$WIRELESS_ID.mode='ap'
+		set wireless.$WIRELESS_ID.ssid=$SSID
+		set wireless.$WIRELESS_ID.encryption=none
+		set wireless.$WIRELESS_ID.hidden='0'
+		commit wireless" \
+		| uci batch
+	fi
+	
+	#################################### NETWORK configuration
+	echo "
+	set network.$WIRELESS_ID=interface
+	set network.$WIRELESS_ID.proto='static'
+	set network.$WIRELESS_ID.ifname=$IF_NAME
+	set network.$WIRELESS_ID.ipaddr=$IP_ADDR
+	set network.$WIRELESS_ID.netmask=$NETMASK
+	commit network" \
+	| uci batch
+
+	#################################### DNSMASQ configuration
+	echo "
+	set dhcp.$WIRELESS_ID=dhcp
+	set dhcp.$WIRELESS_ID.interface=$WIRELESS_ID
+	set dhcp.$WIRELESS_ID.start='10'
+	set dhcp.$WIRELESS_ID.limit='200'
+	set dhcp.$WIRELESS_ID.leasetime='1h'
+	set dhcp.$WIRELESS_ID.dhcpv6='server'
+	set dhcp.$WIRELESS_ID.ra='server'
+	commit dhcp" \
+	| uci batch
+
+	#################################### FIREWALL configuration
+	echo "
+	## Adding interface to public zone
+	add_list firewall.@zone[1].network=$WIRELESS_ID
+	commit firewall" \
+	| uci batch
+
+	/etc/init.d/network restart
+	/etc/init.d/cjdns reload
+	logger -t MILK-AP "Wireless network $SSID - added"	
+	
+elif [ "$OPERATION" = "remove" ];
+then
+	uci delete wireless.$WIRELESS_ID
+	uci delete network.$WIRELESS_ID
+	uci delete dhcp.$WIRELESS_ID
+	uci del_list firewall.@zone[1].network=$WIRELESS_ID
+	uci commit
+	/etc/init.d/network restart
+	/etc/init.d/cjdns reload
+	logger -t MILK-AP "Wireless network $SSID - deleted"	
+fi

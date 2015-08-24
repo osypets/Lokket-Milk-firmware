@@ -7,60 +7,76 @@ GW_MODE=$(uci get batman-adv.bat0.gw_mode)
 GW_IPADDR=$(uci get milk.networks.gw_ipadd)
 GW_NETMASK=$(uci get milk.networks.gw_netmask)
 STATUS=$(uci get milk.global.status)
+PROINFO=$(uci get milk.global.proinfo)
+GNETWORK=$(uci get milk.global.gnetwork)
+MACADDR=$(ifconfig | awk '/eth0/' | awk '{print$5}' | sed 's/[^0-9,A-F]*//g')
 
-if [ "$LINK" = "yes" ] && [ "$PING" = "1" ] && [ "$GW_MODE" = "client" ];
+if [ "$STATUS" = "unprovisioned"] && [ "$GNETWORK" = "none"];
 then
-	GW_MODE=server	
-	echo "
-	set network.wan.ifname='eth0'
-	set network.lan.ifname='bat0'
-	set network.bat.proto='static'
-	set network.bat.ipadd=$GW_IPADDR
-	set network.bat.netmask=$GW_NETMASK
-	set batman-adv.bat0.gw_mode=$GW_MODE
-	commit" \
-	| uci batch
-	/etc/init.d/network restart
-	/etc/init.d/cjdns restart
-	batctl gw $GW_MODE
-	logger -t MILK-AP "Gateway mode changed - $GW_MODE"
+	/etc/milk-scripts/network-mgmt -o add -w pubx -s MILK-${MACADDR:0:4} -i pubx -p 192.168.100.1 -m 255.255.255.0 -e psk2+tkip+aes -k $MACADDR
+	uci set milk.global.gnetwork='created'
+	GNETWORK=created
+	logger -t MILK-AP "AP status - $STATUS"
+fi
 
-elif [ "$LINK" = "yes" ] && [ "$PING" = "0" ] && [ "$GW_MODE" = "server" ];
+if [ "$STATUS" = "unprovisioned"] && [ "$GNETWORK" = "created"] && [ "$PROINFO" = "none" ];
 then
-	GW_MODE=client	
-	echo "
-	set network.wan.ifname='bat0'
-	set network.lan.ifname='eth1'
-	set network.bat.proto='dhcp'
-	delete network.bat.ipadd=$GW_IPADDR
-	delete network.bat.netmask=$GW_NETMASK
-	set batman-adv.bat0.gw_mode=$GW_MODE
-	commit" \
-	| uci batch
-	/etc/init.d/network restart
-	/etc/init.d/cjdns restart
-	batctl gw $GW_MODE
-	logger -t MILK-AP "Gateway mode changed - $GW_MODE"
+	logger -t MILK-AP "AP status - $STATUS"
 
-elif [ "$LINK" = "no" ] && [ "$GW_MODE" = "server" ];
+elif [ "$STATUS" = "provisioned"];
 then
-	GW_MODE=client	
-	echo "
-	set network.wan.ifname='bat0'
-	set network.lan.ifname='eth1'
-	set network.bat.proto='dhcp'
-	delete network.bat.ipadd=$GW_IPADDR
-	delete network.bat.netmask=$GW_NETMASK
-	set batman-adv.bat0.gw_mode=$GW_MODE
-	commit" \
-	| uci batch
-	/etc/init.d/network restart
-	/etc/init.d/cjdns restart
-	batctl gw $GW_MODE
-	logger -t MILK-AP "Gateway mode changed - $GW_MODE"
 
-else
-	logger -t MILK-AP "Gateway mode - $GWMODE. Correct operation mode." 
+	if [ "$LINK" = "yes" ] && [ "$PING" = "1" ] && [ "$GW_MODE" = "client" ];
+	then
+		GW_MODE=server	
+		echo "
+		set network.wan.ifname='eth0'
+		set network.bat.proto='static'
+		set network.bat.ipadd=$GW_IPADDR
+		set network.bat.netmask=$GW_NETMASK
+		set batman-adv.bat0.gw_mode=$GW_MODE
+		commit" \
+		| uci batch
+		/etc/init.d/network restart
+		/etc/init.d/cjdns restart
+		batctl gw $GW_MODE
+		logger -t MILK-AP "Gateway mode changed - $GW_MODE"
+
+	elif [ "$LINK" = "yes" ] && [ "$PING" = "0" ] && [ "$GW_MODE" = "server" ];
+	then
+		GW_MODE=client	
+		echo "
+		set network.wan.ifname='bat0'
+		set network.bat.proto='static'
+		set network.bat.ipadd=$GW_IPADDR
+		set network.bat.netmask=$GW_NETMASK
+		set batman-adv.bat0.gw_mode=$GW_MODE
+		commit" \
+		| uci batch
+		/etc/init.d/network restart
+		/etc/init.d/cjdns restart
+		batctl gw $GW_MODE
+		logger -t MILK-AP "Gateway mode changed - $GW_MODE"
+
+	elif [ "$LINK" = "no" ] && [ "$GW_MODE" = "server" ];
+	then
+		GW_MODE=client	
+		echo "
+		set network.wan.ifname='bat0'
+		set network.bat.proto='static'
+		set network.bat.ipadd=$GW_IPADDR
+		set network.bat.netmask=$GW_NETMASK
+		set batman-adv.bat0.gw_mode=$GW_MODE
+		commit" \
+		| uci batch
+		/etc/init.d/network restart
+		/etc/init.d/cjdns restart
+		batctl gw $GW_MODE
+		logger -t MILK-AP "Gateway mode changed - $GW_MODE"
+
+	else
+		logger -t MILK-AP "Gateway mode - $GWMODE. Correct operation mode." 
+	fi
 fi
 
 if [ "$STATUS" = "provisioned"];
@@ -87,6 +103,15 @@ then
 	echo timer > /sys/class/leds/ubnt\:green\:dome/trigger
 	echo 100 > /sys/class/leds/ubnt\:green\:dome/delay_on
 	echo 100 > /sys/class/leds/ubnt\:green\:dome/delay_off
+	logger -t MILK-AP "Access point is unprovisioned."
+	
+elif [ "$STATUS" = "provisioning"];
+then
+	echo 0 > /sys/class/leds/ubnt\:green\:dome/brightness
+	echo 1 > /sys/class/leds/ubnt\:orange\:dome/brightness
+	echo timer > /sys/class/leds/ubnt\:green\:dome/trigger
+	echo 30 > /sys/class/leds/ubnt\:green\:dome/delay_on
+	echo 30 > /sys/class/leds/ubnt\:green\:dome/delay_off
 	logger -t MILK-AP "Access point is unprovisioned."
 fi
 	

@@ -1,14 +1,23 @@
 #!/bin/sh
 
 ### Firmware version
+VER=$(uci get milk.global.firmware)
 
 ### Output AP MAC address
-ifconfig | awk '/eth0/' | awk '{print$5}
+MACADDR=$(ifconfig | awk '/eth0/' | awk '{print$5}' | sed 's/[^0-9,A-F]*//g')
 
 ### Output machine info
-cat /proc/cpuinfo | awk '/machine/'
+MACHINE=$(cat /proc/cpuinfo | awk '/machine/' | awk -F': ' '{print $2}')
 
 ### Output management IPv6 address
-cat /etc/config/cjdns | awk '/option ipv6/'
+MGMT_IP=$(cat /etc/config/cjdns | awk '/ipv6/ {print $3}' | sed 's/[^0-9,A-F,a-f,:]*//g')
 
 ### Provisioning status
+STATUS=$(uci get milk.global.status)
+
+echo "AP model=$MACHINE" > /etc/milk-scripts/ap-$MACADDR
+echo "Firmware version=$VER" >> /etc/milk-scripts/ap-$MACADDR
+echo "MAC Address=$MACADDR" >> /etc/milk-scripts/ap-$MACADDR
+echo "Management IP=$MGMT_IP" >> /etc/milk-scripts/ap-$MACADDR
+echo "Provisioning status=$STATUS" >> /etc/milk-scripts/ap-$MACADDR
+uci set milk.global.proinfo=generated

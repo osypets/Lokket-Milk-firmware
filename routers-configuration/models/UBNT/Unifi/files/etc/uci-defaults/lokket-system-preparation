@@ -1,204 +1,270 @@
 #!/bin/sh
 
-echo " " > /etc/config/milk
+#################################### CREATE VARIABLES
+VER=1
+MACHINE=$(cat /proc/cpuinfo | awk '/machine/' | awk -F': ' '{print $2}')
 
-#################################### MILK parameters 
-echo "
-set milk.global=params
-set milk.global.status='unprovisioned'
-set milk.global.mode='globalwan'
-commit milk" \
-| uci batch
+## Check for system upgrade or vanilla installation
+CURRENT_VER=$(uci get milk.global.firmware)
 
-#################################### SYSTEM parameters 
-echo "
-set system.@system[-1].hostname='Milk-AP'
-commit system" \
-| uci batch
+if [ $CURRENT_VER -lt $VER ];
+then
+	#################################### Generate banner
+	echo "*****************************************************" > /etc/banner
+	echo "#               LOKKET - MILK firmware              #" >> /etc/banner
+	echo "#---------------------------------------------------#" >> /etc/banner
+	echo "#                 http://lokket.com                 #" >> /etc/banner
+	echo "*****************************************************" >> /etc/banner
+	echo "--- Machine: $MACHINE" >> /etc/banner
+	echo "--- Firmware version: $VER" >> /etc/banner
+	
+else 
+	#################################### Generate banner
+	echo "*****************************************************" > /etc/banner
+	echo "#               LOKKET - MILK firmware              #" >> /etc/banner
+	echo "#---------------------------------------------------#" >> /etc/banner
+	echo "#                 http://lokket.com                 #" >> /etc/banner
+	echo "*****************************************************" >> /etc/banner
+	echo "--- Machine: $MACHINE" >> /etc/banner
+	echo "--- Firmware version: $CURRENT_VER" >> /etc/banner
+	
+	#################################### MILK parameters 
+	echo " " > /etc/config/milk
+	echo "
+	set milk.global=params
+	set milk.global.status='unprovisioned'
+	set milk.global.mode='globalwan'
+	set milk.global.proinfo='none'
+	set milk.global.gnetwork='none'
+	set milk.global.firmware=$VER
+	commit milk" \
+	| uci batch
+	
+	#################################### SYSTEM parameters 
+	echo "
+	set system.@system[-1].hostname='MILK-${MACADDR:0:4}'
+	commit system" \
+	| uci batch
+	
+	#################################### CJDNS parameters and peers
+	echo "
+	add cjdns udp_peer
+	set cjdns.@udp_peer[-1].interface='1'
+	set cjdns.@udp_peer[-1].address='46.101.196.90'
+	set cjdns.@udp_peer[-1].port='11941'
+	set cjdns.@udp_peer[-1].public_key='452w4hgj4y4s9zmzjcs84w5qsx1hqkqxvhkgsdm1qz4jjs0wrcl0.k'
+	set cjdns.@udp_peer[-1].password='y5k9tukhy58kmbd08x3rqwruv4k825g'
+	add cjdns udp_peer
+	set cjdns.@udp_peer[-1].interface='1'
+	set cjdns.@udp_peer[-1].address='52.64.75.111'
+	set cjdns.@udp_peer[-1].port='11941'
+	set cjdns.@udp_peer[-1].public_key='dvj4pqlkrpxczubfnfpvf9mh5l6gyy0jxl7vw7crm8b4r7433t10.k'
+	set cjdns.@udp_peer[-1].password='bybj26mc3unutkzrub05f7sft12107z'
+	add cjdns udp_peer
+	set cjdns.@udp_peer[-1].interface='1'
+	set cjdns.@udp_peer[-1].address='52.64.84.231'
+	set cjdns.@udp_peer[-1].port='11941'
+	set cjdns.@udp_peer[-1].public_key='gd5fq03n9gvjrc5lk59hrjj3fcxbutymnsl0b6rq3mfkgvu2dxp0.k'
+	set cjdns.@udp_peer[-1].password='3pry0x85ru8zkpj1b5rmvybxb1pgkub'
+	add cjdns udp_peer
+	set cjdns.@udp_peer[-1].interface='1'
+	set cjdns.@udp_peer[-1].address='128.199.137.36'
+	set cjdns.@udp_peer[-1].port='11941'
+	set cjdns.@udp_peer[-1].public_key='hzbfqstw3q7sfqbzr6wutywjwz68j41gpq3y63jlh6t6r2qr97f0.k'
+	set cjdns.@udp_peer[-1].password='fjhj3jvpk55xjul7c703z0xp02cy6cv'
 
-#################################### CJDNS parameters and peers
-echo "
-add cjdns udp_peer
-set cjdns.@udp_peer[-1].interface='1'
-set cjdns.@udp_peer[-1].address='46.101.196.90'
-set cjdns.@udp_peer[-1].port='11941'
-set cjdns.@udp_peer[-1].public_key='452w4hgj4y4s9zmzjcs84w5qsx1hqkqxvhkgsdm1qz4jjs0wrcl0.k'
-set cjdns.@udp_peer[-1].password='y5k9tukhy58kmbd08x3rqwruv4k825g'
-add cjdns udp_peer
-set cjdns.@udp_peer[-1].interface='1'
-set cjdns.@udp_peer[-1].address='52.64.75.111'
-set cjdns.@udp_peer[-1].port='11941'
-set cjdns.@udp_peer[-1].public_key='dvj4pqlkrpxczubfnfpvf9mh5l6gyy0jxl7vw7crm8b4r7433t10.k'
-set cjdns.@udp_peer[-1].password='bybj26mc3unutkzrub05f7sft12107z'
-add cjdns udp_peer
-set cjdns.@udp_peer[-1].interface='1'
-set cjdns.@udp_peer[-1].address='52.64.84.231'
-set cjdns.@udp_peer[-1].port='11941'
-set cjdns.@udp_peer[-1].public_key='gd5fq03n9gvjrc5lk59hrjj3fcxbutymnsl0b6rq3mfkgvu2dxp0.k'
-set cjdns.@udp_peer[-1].password='3pry0x85ru8zkpj1b5rmvybxb1pgkub'
-add cjdns udp_peer
-set cjdns.@udp_peer[-1].interface='1'
-set cjdns.@udp_peer[-1].address='128.199.137.36'
-set cjdns.@udp_peer[-1].port='11941'
-set cjdns.@udp_peer[-1].public_key='hzbfqstw3q7sfqbzr6wutywjwz68j41gpq3y63jlh6t6r2qr97f0.k'
-set cjdns.@udp_peer[-1].password='fjhj3jvpk55xjul7c703z0xp02cy6cv'
+	## ----- Set cjdns peering WLAN interface
+	set cjdns.@eth_interface[-1].bind='mesh0'
+	commit cjdns" \
+	| uci batch
+	
+	#################################### NETWORK configuration
+	echo "
+	set network.wan.ifname='eth0'
+	set network.lan.ifname='eth1 bat0'
+	set network.wan6.ifname='eth0'
+	set network.wan6.proto='dhcpv6'
+	set network.wan.type='bridge'
 
-## Set cjdns peering WLAN interface
-set cjdns.@eth_interface[-1].bind='mesh0'
-commit cjdns" \
-| uci batch
+	## ----- Configuring IPv6 ULA prefix
+	set network.globals.ula_prefix='fd86:b9b2:4d4f:8a13::/64'
 
-#################################### NETWORK configuration
-echo "
-set network.wan.ifname='eth0'
-set network.lan.ifname='eth1 bat0'
-set network.wan6.ifname='eth0'
-set network.wan6.proto='dhcpv6'
-set network.wan.type='bridge'
+	## ----- Delete LAN network
+	uci delete network.lan
 
-## LAN ip address configuration
-set network.lan.ipaddr='10.100.180.1'
-set network.lan.netmask='255.255.255.0'
+	## ----- Setup network interfaces for BATMAN-ADV
+	set network.bat=interface
+	set network.bat.ifname='bat0'
+	set network.bat.proto='none'
+		
+	set network.pub=interface
+	set network.pub.type='bridge'
+	set network.pub.ifname='pub0 bat0'
+	set network.pub.proto='static'
+	set network.pub.ipaddr='10.0.0.1'
+	set network.pub.netmask='255.255.255.0'
+	set network.pub.ip6assign='60'
+	
+	set network.mesh=interface
+	set network.mesh.mesh='bat0'
+	set network.mesh.mtu='1544'
+	set network.mesh.proto='batadv'
+	commit network" \
+	| uci batch
+	
+	#################################### DNSMASQ configuration
+	echo "
+	set dhcp.$WIRELESS_ID=dhcp
+	set dhcp.$WIRELESS_ID.interface=pub
+	set dhcp.$WIRELESS_ID.start='10'
+	set dhcp.$WIRELESS_ID.limit='200'
+	set dhcp.$WIRELESS_ID.leasetime='1h'
+	set dhcp.$WIRELESS_ID.dhcpv6='server'
+	set dhcp.$WIRELESS_ID.ra='server'
+	commit dhcp" \
+	| uci batch
 
-## Setup network interfaces for BATMAN-ADV
-set network.bat=interface
-set network.bat.ifname='bat0'
-set network.bat.proto='none'
-set network.mesh=interface
-set network.mesh.mesh='bat0'
-set network.mesh.mtu='1544'
-set network.mesh.proto='batadv'
-commit network" \
-| uci batch
+	#################################### WIRELESS network configuration
+	echo "
+	## ----- Create wireless for MESH
+	set wireless.mesh=wifi-iface
+	set wireless.mesh.device='radio0'
+	set wireless.mesh.network='mesh'
+	set wireless.mesh.ifname='mesh0'
+	set wireless.mesh.mode='adhoc'
+	set wireless.mesh.ssid='mesh.lokket.com'
+	set wireless.mesh.bssid='02:CA:FE:CA:CA:40'
+	set wireless.mesh.encryption='none'
+	set wireless.mesh.hidden='0'
+	set wireless.mesh.mcast_rate='18000'
+	
+	set wireless.mesh=wifi-iface
+	set wireless.mesh.device='radio0'
+	set wireless.mesh.network='pub'
+	set wireless.mesh.ifname='pub0'
+	set wireless.mesh.mode='ap'
+	set wireless.mesh.ssid='MILK-AP'
+	set wireless.mesh.encryption='none'
+	set wireless.mesh.hidden='0'
+	set wireless.mesh.mcast_rate='18000'
+	commit wireless" \
+	| uci batch
 
-#################################### WIRELESS network configuration
-echo "
-## Create wireless for MESH
-set wireless.mesh=wifi-iface
-set wireless.mesh.device='radio0'
-set wireless.mesh.network='mesh'
-set wireless.mesh.ifname='mesh0'
-set wireless.mesh.mode='adhoc'
-set wireless.mesh.ssid='mesh.lokket.com'
-set wireless.mesh.bssid='02:CA:FE:CA:CA:40'
-set wireless.mesh.encryption='none'
-set wireless.mesh.hidden='0'
-set wireless.mesh.mcast_rate='18000'
-commit wireless" \
-| uci batch
+	#################################### BATMAN-ADV configuration
+	echo "
+	set batman-adv.bat0=mesh
+	set batman-adv.bat0.interfaces='mesh0'
+	set batman-adv.bat0.gw_mode='none'
+	commit batman-adv" \
+	| uci batch
+	
+	#################################### FIREWALL configuration
+	echo "
+	## ----- Create Public zone
+	add firewall zone
+	set firewall.@zone[-1].name='pub'
+	set firewall.@zone[-1].input='ACCEPT'
+	set firewall.@zone[-1].output='ACCEPT'
+	set firewall.@zone[-1].forward='ACCEPT'
+	set firewall.@zone[-1].conntrack='1'
 
-#################################### BATMAN-ADV configuration
-echo "
-set batman-adv.bat0=mesh
-set batman-adv.bat0.interfaces='mesh0'
-set batman-adv.bat0.gw_mode='server'
-commit batman-adv" \
-| uci batch
+	add firewall forwarding
+	set firewall.@forwarding[-1].src='pub'
+	set firewall.@forwarding[-1].dest='wan'
 
-#################################### FIREWALL configuration
-echo "
-## Create Public zone
-add firewall zone
-set firewall.@zone[-1].name='pub'
-set firewall.@zone[-1].input='REJECT'
-set firewall.@zone[-1].output='ACCEPT'
-set firewall.@zone[-1].forward='REJECT'
-set firewall.@zone[-1].conntrack='1'
+	add firewall redirect
+	set firewall.@redirect[-1].src='wan'
+	set firewall.@redirect[-1].dest='pub'
+	set firewall.@redirect[-1].target='SNAT'
 
-add firewall forwarding
-set firewall.@forwarding[-1].src='pub'
-set firewall.@forwarding[-1].dest='wan'
+	## ----- Create firewall rules for Public zone
+	add firewall rule
+	set firewall.@rule[-1].name='Allow-DHCP-renew'
+	set firewall.@rule[-1].src='pub'
+	set firewall.@rule[-1].proto='udp'
+	set firewall.@rule[-1].dest_port='68'
+	set firewall.@rule[-1].target='ACCEPT'
+	set firewall.@rule[-1].family='ipv4'
 
-add firewall redirect
-set firewall.@redirect[-1].src='wan'
-set firewall.@redirect[-1].dest='pub'
-set firewall.@redirect[-1].target='SNAT'
+	add firewall rule
+	set firewall.@rule[-1].name='Allow-DHCP'
+	set firewall.@rule[-1].src='pub'
+	set firewall.@rule[-1].proto='udp'
+	set firewall.@rule[-1].dest_port='67'
+	set firewall.@rule[-1].target='ACCEPT'
+	set firewall.@rule[-1].family='ipv4'
 
-## Create firewall rules for Public zone
-add firewall rule
-set firewall.@rule[-1].name='Allow-DHCP-renew'
-set firewall.@rule[-1].src='pub'
-set firewall.@rule[-1].proto='udp'
-set firewall.@rule[-1].dest_port='68'
-set firewall.@rule[-1].target='ACCEPT'
-set firewall.@rule[-1].family='ipv4'
+	add firewall rule
+	set firewall.@rule[-1].name='Allow-Ping'
+	set firewall.@rule[-1].src='pub'
+	set firewall.@rule[-1].proto='icmp'
+	set firewall.@rule[-1].dest_port='53'
+	set firewall.@rule[-1].family='ipv4'
+	set firewall.@rule[-1].target='ACCEPT'
 
-add firewall rule
-set firewall.@rule[-1].name='Allow-DHCP'
-set firewall.@rule[-1].src='pub'
-set firewall.@rule[-1].proto='udp'
-set firewall.@rule[-1].dest_port='67'
-set firewall.@rule[-1].target='ACCEPT'
-set firewall.@rule[-1].family='ipv4'
+	add firewall rule
+	set firewall.@rule[-1].name='Allow-DNS'
+	set firewall.@rule[-1].src='pub'
+	set firewall.@rule[-1].proto='udp'
+	set firewall.@rule[-1].icmp_type='echo-request'
+	set firewall.@rule[-1].family='ipv4'
+	set firewall.@rule[-1].target='ACCEPT'
+	
+	## Adding interface to public zone
+	add_list firewall.@zone[1].network=pub
 
-add firewall rule
-set firewall.@rule[-1].name='Allow-Ping'
-set firewall.@rule[-1].src='pub'
-set firewall.@rule[-1].proto='icmp'
-set firewall.@rule[-1].dest_port='53'
-set firewall.@rule[-1].family='ipv4'
-set firewall.@rule[-1].target='ACCEPT'
+	## ----- Create Coova zone
+	add firewall zone
+	set firewall.@zone[-1].name='coo'
+	set firewall.@zone[-1].input='REJECT'
+	set firewall.@zone[-1].output='ACCEPT'
+	set firewall.@zone[-1].forward='REJECT'
+	set firewall.@zone[-1].conntrack='1'
 
-add firewall rule
-set firewall.@rule[-1].name='Allow-DNS'
-set firewall.@rule[-1].src='pub'
-set firewall.@rule[-1].proto='udp'
-set firewall.@rule[-1].icmp_type='echo-request'
-set firewall.@rule[-1].family='ipv4'
-set firewall.@rule[-1].target='ACCEPT'
+	add firewall forwarding
+	set firewall.@forwarding[-1].src='coo'
+	set firewall.@forwarding[-1].dest='wan'
 
-## Create Coova zone
-add firewall zone
-set firewall.@zone[-1].name='coo'
-set firewall.@zone[-1].input='REJECT'
-set firewall.@zone[-1].output='ACCEPT'
-set firewall.@zone[-1].forward='REJECT'
-set firewall.@zone[-1].conntrack='1'
+	add firewall redirect
+	set firewall.@redirect[-1].src='wan'
+	set firewall.@redirect[-1].dest='coo'
+	set firewall.@redirect[-1].target='SNAT'
 
-add firewall forwarding
-set firewall.@forwarding[-1].src='coo'
-set firewall.@forwarding[-1].dest='wan'
+	## ----- Create MGMT zone
+	add firewall zone
+	set firewall.@zone[-1].name='mgmt'
+	set firewall.@zone[-1].input='REJECT'
+	set firewall.@zone[-1].output='ACCEPT'
+	set firewall.@zone[-1].forward='REJECT'
+	set firewall.@zone[-1].conntrack='1'
 
-add firewall redirect
-set firewall.@redirect[-1].src='wan'
-set firewall.@redirect[-1].dest='coo'
-set firewall.@redirect[-1].target='SNAT'
+	add firewall forwarding
+	set firewall.@forwarding[-1].src='mgmt'
+	set firewall.@forwarding[-1].dest='wan'
 
-## Create MGMT zone
-add firewall zone
-set firewall.@zone[-1].name='mgmt'
-set firewall.@zone[-1].input='REJECT'
-set firewall.@zone[-1].output='ACCEPT'
-set firewall.@zone[-1].forward='REJECT'
-set firewall.@zone[-1].conntrack='1'
+	add firewall redirect
+	set firewall.@redirect[-1].src='wan'
+	set firewall.@redirect[-1].dest='mgmt'
+	set firewall.@redirect[-1].target='SNAT'
 
-add firewall forwarding
-set firewall.@forwarding[-1].src='mgmt'
-set firewall.@forwarding[-1].dest='wan'
+	## ----- Rule for testing ---
+	add firewall rule
+	set firewall.@rule[-1].name='Allow-SSH'
+	set firewall.@rule[-1].src='wan'
+	set firewall.@rule[-1].proto='tcp'
+	set firewall.@rule[-1].dest_port='22'
+	set firewall.@rule[-1].target='ACCEPT'
+	set firewall.@rule[-1].family='ipv4'
 
-add firewall redirect
-set firewall.@redirect[-1].src='wan'
-set firewall.@redirect[-1].dest='mgmt'
-set firewall.@redirect[-1].target='SNAT'
-
-## -- Rule for testing ---
-add firewall rule
-set firewall.@rule[-1].name='Allow-SSH'
-set firewall.@rule[-1].src='wan'
-set firewall.@rule[-1].proto='tcp'
-set firewall.@rule[-1].dest_port='22'
-set firewall.@rule[-1].target='ACCEPT'
-set firewall.@rule[-1].family='ipv4'
-
-## Enable management SSH access (CJDNS)
-delete firewall.@rule[8].enabled='0'
-commit firewall" \
-| uci batch
-
-/etc/init.d/network restart
-/etc/init.d/cjdns reload
-/etc/init.d/cron start
-/etc/init.d/cron enable
-echo " " > /etc/config/milk
-echo "* * * * * /etc/milk-scripts/batman-adv-gw-mode" > /etc/crontabs/root
-chmod 755 /etc/milk-scripts/batman-adv-gw-mode
+	## ----- Enable management SSH access (CJDNS)
+	delete firewall.@rule[8].enabled='0'
+	commit firewall" \
+	| uci batch
+	/etc/init.d/cron start
+	/etc/init.d/cron enable
+	chmod 755 /etc/milk-scripts/batman-adv-gw-mode
+	chmod 755 /etc/milk-scripts/network-mgmt
+	chmod 755 /etc/milk-scripts/provisioning-info
+	echo "* * * * * /etc/milk-scripts/batman-adv-gw-mode" > /etc/crontabs/root
+	echo "* * * * * /etc/milk-scripts/provisioning-info" >> /etc/crontabs/root
+fi
