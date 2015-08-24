@@ -99,7 +99,7 @@ else
 		
 	set network.pub=interface
 	set network.pub.type='bridge'
-	set network.pub.ifname='pub0 bat0'
+	set network.pub.ifname='pub0'
 	set network.pub.proto='static'
 	set network.pub.ipaddr='10.0.0.1'
 	set network.pub.netmask='255.255.255.0'
