@@ -81,11 +81,14 @@ then
 	
 elif [ "$OPERATION" = "remove" ];
 then
-	uci delete wireless.$WIRELESS_ID
-	uci delete network.$WIRELESS_ID
-	uci delete dhcp.$WIRELESS_ID
-	uci del_list firewall.@zone[1].network=$WIRELESS_ID
-	uci commit
+	echo "
+	delete wireless.$WIRELESS_ID
+	delete network.$WIRELESS_ID
+	delete dhcp.$WIRELESS_ID
+	del_list firewall.@zone[1].network=$WIRELESS_ID
+	commit" \
+	| uci batch
+	
 	/etc/init.d/network restart
 	/etc/init.d/cjdns reload
 	logger -t MILK-AP "Wireless network $SSID - deleted"	

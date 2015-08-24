@@ -1,7 +1,8 @@
 #!/bin/sh
 
-#################################### CREATE VARIABLES
+#################################### CREATE AND ASSIGN VARIABLES
 VER=1
+MACADDR=$(ifconfig | awk '/eth0/' | awk '{print$5}' | sed 's/[^0-9,A-F]*//g')
 MACHINE=$(cat /proc/cpuinfo | awk '/machine/' | awk -F': ' '{print $2}')
 
 ## Check for system upgrade or vanilla installation
@@ -42,7 +43,7 @@ else
 	
 	#################################### SYSTEM parameters 
 	echo "
-	set system.@system[-1].hostname='MILK-${MACADDR:0:4}'
+	set system.@system[-1].hostname=MILK-${MACADDR:0:4}
 	commit system" \
 	| uci batch
 	
@@ -81,21 +82,25 @@ else
 	#################################### NETWORK configuration
 	echo "
 	set network.wan.ifname='eth0'
-	set network.lan.ifname='eth1 bat0'
+	set network.lan.ifname='eth1'
 	set network.wan6.ifname='eth0'
 	set network.wan6.proto='dhcpv6'
-	set network.wan.type='bridge'
 
 	## ----- Configuring IPv6 ULA prefix
 	set network.globals.ula_prefix='fd86:b9b2:4d4f:8a13::/64'
 
 	## ----- Delete LAN network
-	uci delete network.lan
+	delete network.lan
 
 	## ----- Setup network interfaces for BATMAN-ADV
 	set network.bat=interface
 	set network.bat.ifname='bat0'
 	set network.bat.proto='none'
+	
+	set network.mesh=interface
+	set network.mesh.mesh='bat0'
+	set network.mesh.mtu='1544'
+	set network.mesh.proto='batadv'
 		
 	set network.pub=interface
 	set network.pub.type='bridge'
@@ -105,10 +110,6 @@ else
 	set network.pub.netmask='255.255.255.0'
 	set network.pub.ip6assign='60'
 	
-	set network.mesh=interface
-	set network.mesh.mesh='bat0'
-	set network.mesh.mtu='1544'
-	set network.mesh.proto='batadv'
 	commit network" \
 	| uci batch
 	
@@ -143,7 +144,7 @@ else
 	set wireless.mesh.network='pub'
 	set wireless.mesh.ifname='pub0'
 	set wireless.mesh.mode='ap'
-	set wireless.mesh.ssid='MILK-AP'
+	set wireless.mesh.ssid=MILK-AP-${MACADDR:0:4}
 	set wireless.mesh.encryption='none'
 	set wireless.mesh.hidden='0'
 	set wireless.mesh.mcast_rate='18000'
@@ -260,6 +261,7 @@ else
 	delete firewall.@rule[8].enabled='0'
 	commit firewall" \
 	| uci batch
+	
 	/etc/init.d/cron start
 	/etc/init.d/cron enable
 	chmod 755 /etc/milk-scripts/batman-adv-gw-mode
