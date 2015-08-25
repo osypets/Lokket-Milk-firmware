@@ -20,15 +20,6 @@ then
 	echo "--- Firmware version: $VER" >> /etc/banner
 	
 else 
-	#################################### Generate banner
-	echo "*****************************************************" > /etc/banner
-	echo "#               LOKKET - MILK firmware              #" >> /etc/banner
-	echo "#---------------------------------------------------#" >> /etc/banner
-	echo "#                 http://lokket.com                 #" >> /etc/banner
-	echo "*****************************************************" >> /etc/banner
-	echo "--- Machine: $MACHINE" >> /etc/banner
-	echo "--- Firmware version: $CURRENT_VER" >> /etc/banner
-	
 	#################################### MILK parameters 
 	echo " " > /etc/config/milk
 	echo "
@@ -40,6 +31,17 @@ else
 	set milk.global.firmware=$VER
 	commit milk" \
 	| uci batch
+	
+	CURRENT_VER=$(uci get milk.global.firmware)
+
+	#################################### Generate banner
+	echo "*****************************************************" > /etc/banner
+	echo "#               LOKKET - MILK firmware              #" >> /etc/banner
+	echo "#---------------------------------------------------#" >> /etc/banner
+	echo "#                 http://lokket.com                 #" >> /etc/banner
+	echo "*****************************************************" >> /etc/banner
+	echo "--- Machine: $MACHINE" >> /etc/banner
+	echo "--- Firmware version: $CURRENT_VER" >> /etc/banner
 	
 	#################################### SYSTEM parameters 
 	echo "
@@ -106,7 +108,7 @@ else
 	set network.pub0.type='bridge'
 	set network.pub0.ifname='pub0'
 	set network.pub0.proto='static'
-	set network.pub0.ipaddr='10.0.0.1'
+	set network.pub0.ipaddr='10.100.0.1'
 	set network.pub0.netmask='255.255.255.0'
 	set network.pub0.ip6assign='60'
 	
@@ -175,6 +177,16 @@ else
 	set firewall.@zone[-1].output='ACCEPT'
 	set firewall.@zone[-1].forward='ACCEPT'
 	set firewall.@zone[-1].conntrack='1'
+	
+	## ----- Create Coova zone
+	add firewall zone
+	set firewall.@zone[-1].name='coo'
+	set firewall.@zone[-1].input='REJECT'
+	set firewall.@zone[-1].output='ACCEPT'
+	set firewall.@zone[-1].forward='REJECT'
+	set firewall.@zone[-1].conntrack='1'
+
+	## Forwarding for Coova and Public zones
 
 	add firewall forwarding
 	set firewall.@forwarding[-1].src='pub'
@@ -183,6 +195,15 @@ else
 	add firewall redirect
 	set firewall.@redirect[-1].src='wan'
 	set firewall.@redirect[-1].dest='pub'
+	set firewall.@redirect[-1].target='SNAT'
+	
+	add firewall forwarding
+	set firewall.@forwarding[-1].src='coo'
+	set firewall.@forwarding[-1].dest='wan'
+
+	add firewall redirect
+	set firewall.@redirect[-1].src='wan'
+	set firewall.@redirect[-1].dest='coo'
 	set firewall.@redirect[-1].target='SNAT'
 
 	## ----- Create firewall rules for Public zone
@@ -203,58 +224,21 @@ else
 	set firewall.@rule[-1].family='ipv4'
 
 	add firewall rule
-	set firewall.@rule[-1].name='Allow-Ping'
+	set firewall.@rule[-1].name='Allow-DNS'
 	set firewall.@rule[-1].src='pub'
-	set firewall.@rule[-1].proto='icmp'
+	set firewall.@rule[-1].proto='tcp'
 	set firewall.@rule[-1].dest_port='53'
 	set firewall.@rule[-1].family='ipv4'
 	set firewall.@rule[-1].target='ACCEPT'
 
 	add firewall rule
-	set firewall.@rule[-1].name='Allow-DNS'
+	set firewall.@rule[-1].name='Allow-PING'
 	set firewall.@rule[-1].src='pub'
-	set firewall.@rule[-1].proto='udp'
+	set firewall.@rule[-1].proto='icmp'
 	set firewall.@rule[-1].icmp_type='echo-request'
 	set firewall.@rule[-1].family='ipv4'
 	set firewall.@rule[-1].target='ACCEPT'
 	
-	## Adding interface to public zone
-	add_list firewall.@zone[1].network=pub0
-
-	## ----- Create Coova zone
-	add firewall zone
-	set firewall.@zone[-1].name='coo'
-	set firewall.@zone[-1].input='REJECT'
-	set firewall.@zone[-1].output='ACCEPT'
-	set firewall.@zone[-1].forward='REJECT'
-	set firewall.@zone[-1].conntrack='1'
-
-	add firewall forwarding
-	set firewall.@forwarding[-1].src='coo'
-	set firewall.@forwarding[-1].dest='wan'
-
-	add firewall redirect
-	set firewall.@redirect[-1].src='wan'
-	set firewall.@redirect[-1].dest='coo'
-	set firewall.@redirect[-1].target='SNAT'
-
-	## ----- Create MGMT zone
-	add firewall zone
-	set firewall.@zone[-1].name='mgmt'
-	set firewall.@zone[-1].input='REJECT'
-	set firewall.@zone[-1].output='ACCEPT'
-	set firewall.@zone[-1].forward='REJECT'
-	set firewall.@zone[-1].conntrack='1'
-
-	add firewall forwarding
-	set firewall.@forwarding[-1].src='mgmt'
-	set firewall.@forwarding[-1].dest='wan'
-
-	add firewall redirect
-	set firewall.@redirect[-1].src='wan'
-	set firewall.@redirect[-1].dest='mgmt'
-	set firewall.@redirect[-1].target='SNAT'
-
 	## ----- Rule for testing ---
 	add firewall rule
 	set firewall.@rule[-1].name='Allow-SSH'
@@ -266,6 +250,10 @@ else
 
 	## ----- Enable management SSH access (CJDNS)
 	delete firewall.@rule[8].enabled='0'
+	
+	## Adding interface to public zone
+	add_list firewall.@zone[1].network=pub0
+
 	commit firewall" \
 	| uci batch
 	
@@ -274,6 +262,7 @@ else
 	chmod 755 /etc/milk-scripts/batman-adv-gw-mode
 	chmod 755 /etc/milk-scripts/network-mgmt
 	chmod 755 /etc/milk-scripts/provisioning-info
-	echo "* * * * * /etc/milk-scripts/batman-adv-gw-mode" > /etc/crontabs/root
+#	echo "* * * * * /etc/milk-scripts/batman-adv-gw-mode" > /etc/crontabs/root
 	echo "* * * * * /etc/milk-scripts/provisioning-info" >> /etc/crontabs/root
+	/etc/init.d/network restart
 fi
