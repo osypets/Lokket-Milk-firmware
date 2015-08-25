@@ -13,7 +13,7 @@ MACADDR=$(ifconfig | awk '/eth0/' | awk '{print$5}' | sed 's/[^0-9,A-F]*//g')
 
 if [ "$STATUS" = "unprovisioned"] && [ "$GNETWORK" = "none"];
 then
-	/etc/milk-scripts/network-mgmt -o add -w pubx -s MILK-${MACADDR:0:4} -i pubx -p 192.168.100.1 -m 255.255.255.0 -e psk2+tkip+aes -k $MACADDR
+	/etc/milk-scripts/network-mgmt -o add -w pubx -s MILK-${MACADDR:8:4} -i pubx -p 192.168.100.1 -m 255.255.255.0 -e psk2+tkip+aes -k $MACADDR
 	uci set milk.global.gnetwork='created'
 	GNETWORK=created
 	logger -t MILK-AP "AP status - $STATUS"

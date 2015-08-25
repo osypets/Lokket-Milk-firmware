@@ -43,7 +43,7 @@ else
 	
 	#################################### SYSTEM parameters 
 	echo "
-	set system.@system[-1].hostname=MILK-${MACADDR:0:4}
+	set system.@system[-1].hostname=MILK-${MACADDR:8:4}
 	commit system" \
 	| uci batch
 	
@@ -102,26 +102,29 @@ else
 	set network.mesh.mtu='1544'
 	set network.mesh.proto='batadv'
 		
-	set network.pub=interface
-	set network.pub.type='bridge'
-	set network.pub.ifname='pub0'
-	set network.pub.proto='static'
-	set network.pub.ipaddr='10.0.0.1'
-	set network.pub.netmask='255.255.255.0'
-	set network.pub.ip6assign='60'
+	set network.pub0=interface
+	set network.pub0.type='bridge'
+	set network.pub0.ifname='pub0'
+	set network.pub0.proto='static'
+	set network.pub0.ipaddr='10.0.0.1'
+	set network.pub0.netmask='255.255.255.0'
+	set network.pub0.ip6assign='60'
 	
 	commit network" \
 	| uci batch
 	
 	#################################### DNSMASQ configuration
 	echo "
-	set dhcp.$WIRELESS_ID=dhcp
-	set dhcp.$WIRELESS_ID.interface=pub
-	set dhcp.$WIRELESS_ID.start='10'
-	set dhcp.$WIRELESS_ID.limit='200'
-	set dhcp.$WIRELESS_ID.leasetime='1h'
-	set dhcp.$WIRELESS_ID.dhcpv6='server'
-	set dhcp.$WIRELESS_ID.ra='server'
+	## Delete configuration for LAN network
+	delete dhcp.lan
+	
+	set dhcp.pub0=dhcp
+	set dhcp.pub0.interface=pub0
+	set dhcp.pub0.start='10'
+	set dhcp.pub0.limit='200'
+	set dhcp.pub0.leasetime='1h'
+	set dhcp.pub0.dhcpv6='server'
+	set dhcp.pub0.ra='server'
 	commit dhcp" \
 	| uci batch
 
@@ -139,15 +142,15 @@ else
 	set wireless.mesh.hidden='0'
 	set wireless.mesh.mcast_rate='18000'
 	
-	set wireless.mesh=wifi-iface
-	set wireless.mesh.device='radio0'
-	set wireless.mesh.network='pub'
-	set wireless.mesh.ifname='pub0'
-	set wireless.mesh.mode='ap'
-	set wireless.mesh.ssid=MILK-AP-${MACADDR:0:4}
-	set wireless.mesh.encryption='none'
-	set wireless.mesh.hidden='0'
-	set wireless.mesh.mcast_rate='18000'
+	set wireless.pub0=wifi-iface
+	set wireless.pub0.device='radio0'
+	set wireless.pub0.network='pub0'
+	set wireless.pub0.ifname='pub0'
+	set wireless.pub0.mode='ap'
+	set wireless.pub0.ssid=MILK-AP-${MACADDR:8:4}
+	set wireless.pub0.encryption='none'
+	set wireless.pub0.hidden='0'
+	set wireless.pub0.mcast_rate='18000'
 	commit wireless" \
 	| uci batch
 
@@ -161,6 +164,10 @@ else
 	
 	#################################### FIREWALL configuration
 	echo "
+	## ----- Delete Lan zone
+	delete firewall.@zone[0]
+	delete firewall.@forwarding[0]
+	
 	## ----- Create Public zone
 	add firewall zone
 	set firewall.@zone[-1].name='pub'
@@ -212,7 +219,7 @@ else
 	set firewall.@rule[-1].target='ACCEPT'
 	
 	## Adding interface to public zone
-	add_list firewall.@zone[1].network=pub
+	add_list firewall.@zone[1].network=pub0
 
 	## ----- Create Coova zone
 	add firewall zone
